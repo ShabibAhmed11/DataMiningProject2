@@ -9,6 +9,8 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering
+
 textArray = []
 
 def readAndProcess(fileName):
@@ -28,7 +30,7 @@ def bagOfWordsCreator(textArray):
         return BOW
     
 def plotClusters(simplifiedCLusters, labels, title):
-    plt.scatter(simplifiedCLusters[:, 0], simplifiedCLusters[:, 1], c=labels)
+    plt.scatter(simplifiedCLusters[:, 0], simplifiedCLusters[:, 1], c=labels,s=1)
     plt.title(title)
     plt.show()
     
@@ -66,9 +68,29 @@ def dbscanCosine(bagOfWords):
     simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
     plotClusters(simplifiedCLusters,labels, 'DBSCAN Cosine Clusters')
     
+def aggCosine(bagOfWords):
+    agglo = AgglomerativeClustering(n_clusters=10, metric='cosine', linkage='average')
+    agglo.fit(bagOfWords.toarray())
+    labels = agglo.labels_
+    print(labels)
+    silScore = silhouette_score(bagOfWords, labels)
+    print(f'Silhouette Score for Cosine Agglomerative Hierarchical: {silScore}')
+    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
+    plotClusters(simplifiedCLusters,labels, 'Agglomerative Hierarchical Cosine Clusters')
+
+def aggEuclidean(bagOfWords):
+    agglo = AgglomerativeClustering(n_clusters=10, metric='euclidean', linkage='average')
+    agglo.fit(bagOfWords.toarray())
+    labels = agglo.labels_
+    print(labels)
+    silScore = silhouette_score(bagOfWords, labels)
+    print(f'Silhouette Score for Euclidean Agglomerative Hierarchical: {silScore}')
+    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
+    plotClusters(simplifiedCLusters,labels, 'Agglomerative Hierarchical Euclidean Clusters')
+    
+    
 def kMeans(bagOfWords):
-    num_clusters = 20
-    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    kmeans = KMeans(n_clusters=10, random_state=42)
     kmeans.fit(bagOfWords)
     labels = kmeans.labels_
     print(labels)
@@ -80,4 +102,4 @@ def kMeans(bagOfWords):
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
 
-kMeans(bagOfWords)
+aggEuclidean(bagOfWords)
