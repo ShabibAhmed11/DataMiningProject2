@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import re
+import nltk
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
@@ -9,15 +11,48 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.datasets import fetch_20newsgroups
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+
 
 textArray = []
 
+
+
+
+
 def readAndProcess(fileName):
+    #makes the list of stopwords
+    nltk.download('stopwords') #only needs to be downloaded once
+    words=stopwords.words('english')
+    #adding custom stopwords
+    addOnWords = ['a','to','cnn','rt','of','it','at']
+    for i in addOnWords:
+        words.append(i)
+    stemmer = SnowballStemmer("english")
+    stopWords= set(words)
+    
     with open(fileName, 'r', encoding="utf8") as file:
         for line in file:
-            textArray.append(line.strip().split('|')[2])
-
+            tempString = ""
+            temp = line.strip().split('|')[2]
+            tempArray = temp.split(' ')
+            for i in tempArray:
+                if i[:4] == 'http':
+                    i = ' '
+                
+                tempString += i+ ' '
+            #removes digits and making everything lowercase
+            tempString = re.sub(r'\d+','', tempString).lower()
+            #removes special characters
+            tempString = tempString.replace('\'',"")
+            tempString = re.sub(r'\W+',' ', tempString)
+            #removes stop words
+            tempString=' '.join([word for word in tempString.split() if word not in stopWords])
+            #print(tempString)
+            textArray.append(tempString)
+            
 def bagOfWordsCreator(textArray):
         vectorizer = CountVectorizer()
         vectorizer.fit(textArray)
