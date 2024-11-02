@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
@@ -17,10 +18,6 @@ from nltk.stem import SnowballStemmer
 
 
 textArray = []
-
-
-
-
 
 def readAndProcess(fileName):
     #makes the list of stopwords
@@ -56,7 +53,14 @@ def readAndProcess(fileName):
 def bagOfWordsCreator(textArray):
         vectorizer = CountVectorizer()
         vectorizer.fit(textArray)
-        BOW = vectorizer.transform(textArray)     
+        BOW = vectorizer.transform(textArray)
+        word_counts = BOW.toarray().sum(axis=0)
+        word_freq = [(word, word_counts[idx]) for word, idx in vectorizer.vocabulary_.items()]
+        word_freq = sorted(word_freq, key=lambda x: x[1], reverse=True) 
+        with open("WordCounts.txt", "w") as file:
+            file.write(str(len(word_freq)) + '\n')    
+            for i in word_freq:
+                file.write(str(i) + '\n')    
         """
         with open("BagOfWords.txt", "w") as file:
             for i in BOW:
@@ -137,4 +141,3 @@ def kMeans(bagOfWords):
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
 
-aggEuclidean(bagOfWords)
