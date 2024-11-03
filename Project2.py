@@ -69,10 +69,17 @@ def bagOfWordsCreator(textArray):
                 file.write(str(i) + '\n')    
         return BOW
     
-def plotClusters(simplifiedCLusters, labels, title):
-    plt.scatter(simplifiedCLusters[:, 0], simplifiedCLusters[:, 1], c=labels,s=1)
+def plotClusters(clusters, labels, title):
+    plt.scatter(clusters[:, 0], clusters[:, 1], c=labels,s=1)
     plt.title(title)
     plt.show()
+    
+def clusterInformation(labels):
+    clusNum = max(labels)
+    print("Number of Clusters: " + str(clusNum))
+    for i in range(0, clusNum):
+        print("Cluster " + str(i) + " size: "+ str(np.count_nonzero(labels == i)))
+    
     
 def cosineDistance(bagOfWords):
     cosineSimilarities = linear_kernel(bagOfWords, bagOfWords)
@@ -102,42 +109,54 @@ def dbscanCosine(bagOfWords):
     dbscan = DBSCAN(eps=0.5, min_samples=5, metric='cosine')
     dbscan.fit(bagOfWords)
     labels = dbscan.labels_
-    print(labels)
-    silScore = silhouette_score(bagOfWords, labels)
-    print(f'Silhouette Score for Cosine DBSCAN: {silScore}')
-    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
-    plotClusters(simplifiedCLusters,labels, 'DBSCAN Cosine Clusters')
+    print("DBSCAN Cosine")
+    #Get Cluster Information
+    clusterInformation(labels)
+    #Get Silhouette Score
+    print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
+    #Plot Clusters
+    plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'DBSCAN Cosine')
     
 def aggCosine(bagOfWords):
-    agglo = AgglomerativeClustering(n_clusters=10, metric='cosine', linkage='average')
+    #Cluster Them
+    agglo = AgglomerativeClustering(n_clusters=7, metric='cosine', linkage='complete')
     agglo.fit(bagOfWords.toarray())
     labels = agglo.labels_
-    print(labels)
-    silScore = silhouette_score(bagOfWords, labels)
-    print(f'Silhouette Score for Cosine Agglomerative Hierarchical: {silScore}')
-    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
-    plotClusters(simplifiedCLusters,labels, 'Agglomerative Hierarchical Cosine Clusters')
+    print("Agglomerative Hierarchical Cosine")
+    #Get Cluster Information
+    clusterInformation(labels)
+    #Get Silhouette Score
+    print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
+    #Plot Clusters
+    plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Cosine')
 
 def aggEuclidean(bagOfWords):
-    agglo = AgglomerativeClustering(n_clusters=10, metric='euclidean', linkage='average')
+    #Cluster Them
+    agglo = AgglomerativeClustering(n_clusters=7, metric='euclidean', linkage='ward')
     agglo.fit(bagOfWords.toarray())
     labels = agglo.labels_
-    print(labels)
-    silScore = silhouette_score(bagOfWords, labels)
-    print(f'Silhouette Score for Euclidean Agglomerative Hierarchical: {silScore}')
-    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
-    plotClusters(simplifiedCLusters,labels, 'Agglomerative Hierarchical Euclidean Clusters')
+    print("Agglomerative Hierarchical Euclidean")
+    #Get Cluster Information
+    clusterInformation(labels)
+    #Get Silhouette Score
+    print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
+    #Plot Clusters
+    plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Euclidean')
     
     
 def kMeans(bagOfWords):
-    kmeans = KMeans(n_clusters=7, random_state=42)
+    #Cluster Them
+    kmeans = KMeans(n_clusters=10)
     kmeans.fit(bagOfWords)
     labels = kmeans.labels_
-    print(len(labels))
-    silScore = silhouette_score(bagOfWords, labels)
-    print(f'Silhouette Score for Kmeans: {silScore}')
-    simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
-    plotClusters(simplifiedCLusters,labels, 'Kmeans Clusters')
+    print("KMEANS")
+    #Get Cluster Information
+    clusterInformation(labels)
+    #Get Silhouette Score
+    print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
+    #Plot Clusters
+    plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Kmeans Clusters')
     
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
+dbscanCosine(bagOfWords)
