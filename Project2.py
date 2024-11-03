@@ -2,6 +2,7 @@ import re
 import nltk
 import sys
 import matplotlib.pyplot as plt
+from math import log
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -17,7 +18,6 @@ from sklearn.decomposition import PCA
 from sklearn.datasets import fetch_20newsgroups
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
-
 textArray = []
 
 def readAndProcess(fileName):
@@ -85,6 +85,14 @@ def calculatePurity(label1, label2):
     contingency_matrix = metrics.cluster.contingency_matrix(label1, label2)
     return np.sum(np.amax(contingency_matrix, axis=0)) / np.sum(contingency_matrix)
 
+def entropy(labels):
+    labelLength = len(labels)
+    value,counts = np.unique(labels, return_counts=True)
+    probs = counts / labelLength
+    ent = 0.
+    for i in probs:
+        ent -= i * log(i, 2)
+    return ent
 
 def cosineDistance(bagOfWords):
     cosineSimilarities = linear_kernel(bagOfWords, bagOfWords)
@@ -171,4 +179,8 @@ readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
 label1 = dbscanCosine(bagOfWords)
 label2 = kMeans(bagOfWords)
-print(calculatePurity(label1,label2))
+
+
+
+
+print(entropy(label2))
