@@ -1,21 +1,21 @@
+import re
+import nltk
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import re
-import nltk
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.cluster import DBSCAN
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
 from sklearn.datasets import fetch_20newsgroups
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
-
 
 textArray = []
 
@@ -48,24 +48,25 @@ def readAndProcess(fileName):
             #removes stop words
             tempString=' '.join([word for word in tempString.split() if word not in stopWords])
             #print(tempString)
-            textArray.append(tempString)
+            textArray.append(tempString)      
             
 def bagOfWordsCreator(textArray):
+        #Create Bag of Words
         vectorizer = CountVectorizer()
         vectorizer.fit(textArray)
         BOW = vectorizer.transform(textArray)
-        word_counts = BOW.toarray().sum(axis=0)
-        word_freq = [(word, word_counts[idx]) for word, idx in vectorizer.vocabulary_.items()]
-        word_freq = sorted(word_freq, key=lambda x: x[1], reverse=True) 
-        with open("WordCounts.txt", "w") as file:
-            file.write(str(len(word_freq)) + '\n')    
-            for i in word_freq:
+        #Generate Statistics
+        wordCount = BOW.toarray().sum(axis=0)
+        wordFreq = [(word, wordCount[idx]) for word, idx in vectorizer.vocabulary_.items()]
+        wordFreq = sorted(wordFreq, key=lambda x: x[1], reverse=True) 
+        #Print Statistics to file
+        with open("Feature Matrix Statistics.txt", "w") as file:
+            file.write("Number of Documents: " + str(len(textArray)) + '\n')  
+            file.write("Number of Tokens: " + str(sum(wordCount)) + '\n')  
+            file.write("Number of Unique Terms: " + str(len(wordFreq)) + '\n')    
+            file.write("Average Terms: " + str(sum(wordCount)/len(textArray)) + '\n')    
+            for i in wordFreq:
                 file.write(str(i) + '\n')    
-        """
-        with open("BagOfWords.txt", "w") as file:
-            for i in BOW:
-                file.write(str(i)) 
-        """
         return BOW
     
 def plotClusters(simplifiedCLusters, labels, title):
@@ -129,10 +130,10 @@ def aggEuclidean(bagOfWords):
     
     
 def kMeans(bagOfWords):
-    kmeans = KMeans(n_clusters=10, random_state=42)
+    kmeans = KMeans(n_clusters=7, random_state=42)
     kmeans.fit(bagOfWords)
     labels = kmeans.labels_
-    print(labels)
+    print(len(labels))
     silScore = silhouette_score(bagOfWords, labels)
     print(f'Silhouette Score for Kmeans: {silScore}')
     simplifiedCLusters = PCA(n_components=2).fit_transform(bagOfWords.toarray())
@@ -140,4 +141,3 @@ def kMeans(bagOfWords):
     
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
-
