@@ -12,6 +12,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearn.datasets import fetch_20newsgroups
 from nltk.corpus import stopwords
@@ -80,7 +81,11 @@ def clusterInformation(labels):
     for i in range(0, clusNum):
         print("Cluster " + str(i) + " size: "+ str(np.count_nonzero(labels == i)))
     
-    
+def calculatePurity(label1, label2): 
+    contingency_matrix = metrics.cluster.contingency_matrix(label1, label2)
+    return np.sum(np.amax(contingency_matrix, axis=0)) / np.sum(contingency_matrix)
+
+
 def cosineDistance(bagOfWords):
     cosineSimilarities = linear_kernel(bagOfWords, bagOfWords)
     cosineSimilarities = cosineSimilarities.flatten()
@@ -116,6 +121,8 @@ def dbscanCosine(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'DBSCAN Cosine')
+    return labels
+
     
 def aggCosine(bagOfWords):
     #Cluster Them
@@ -129,6 +136,7 @@ def aggCosine(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Cosine')
+    return labels
 
 def aggEuclidean(bagOfWords):
     #Cluster Them
@@ -142,7 +150,8 @@ def aggEuclidean(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Euclidean')
-    
+    return labels
+   
     
 def kMeans(bagOfWords):
     #Cluster Them
@@ -156,7 +165,10 @@ def kMeans(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Kmeans Clusters')
-    
+    return labels
+   
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
-dbscanCosine(bagOfWords)
+label1 = dbscanCosine(bagOfWords)
+label2 = kMeans(bagOfWords)
+print(calculatePurity(label1,label2))
