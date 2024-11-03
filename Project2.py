@@ -95,6 +95,7 @@ def entropy(labels):
     return ent
 
 def getWords(textArray,labels, fileName):
+    open(fileName, 'w').close()
     for i in range (0,max(labels)):
         tempText = []
         for k in range (0,len(textArray)):
@@ -107,7 +108,6 @@ def getWords(textArray,labels, fileName):
         wordCount = BOW.toarray().sum(axis=0)
         wordFreq = [(word, wordCount[idx]) for word, idx in vectorizer.vocabulary_.items()]
         wordFreq = sorted(wordFreq, key=lambda x: x[1], reverse=True) 
-        open(fileName, 'w').close()
         with open(fileName , "a") as file:   
             file.write("CLUSTER" + str(i) + '\n')    
             for i in wordFreq:
