@@ -94,6 +94,24 @@ def entropy(labels):
         ent -= i * log(i, 2)
     return ent
 
+def getWords(textArray,labels, fileName):
+    for i in range (0,max(labels)):
+        tempText = []
+        for k in range (0,len(textArray)):
+            if labels[k] == i:
+                tempText.append(textArray[k])
+        #probably really inefficient way to do this Im ngl
+        vectorizer = CountVectorizer()
+        vectorizer.fit(tempText)
+        BOW = vectorizer.transform(textArray)
+        wordCount = BOW.toarray().sum(axis=0)
+        wordFreq = [(word, wordCount[idx]) for word, idx in vectorizer.vocabulary_.items()]
+        wordFreq = sorted(wordFreq, key=lambda x: x[1], reverse=True) 
+        with open(fileName , "a") as file:   
+            file.write("CLUSTER" + str(i) + '\n')    
+            for i in wordFreq:
+                file.write(str(i) + '\n')   
+                
 def cosineDistance(bagOfWords):
     cosineSimilarities = linear_kernel(bagOfWords, bagOfWords)
     cosineSimilarities = cosineSimilarities.flatten()
@@ -129,6 +147,7 @@ def dbscanCosine(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'DBSCAN Cosine')
+    getWords(textArray,labels.flatten(),"DBSCAN Cosine CLUSTER WORDS")
     return labels
 
     
@@ -144,6 +163,7 @@ def aggCosine(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Cosine')
+    getWords(textArray,labels.flatten(),"Agglomerative Hierarchical Cosine CLUSTER WORDS")
     return labels
 
 def aggEuclidean(bagOfWords):
@@ -158,9 +178,9 @@ def aggEuclidean(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Agglomerative Hierarchical Euclidean')
+    getWords(textArray,labels.flatten(),"Agglomerative Hierarchical Euclidean CLUSTER WORDS")
     return labels
    
-    
 def kMeans(bagOfWords):
     #Cluster Them
     kmeans = KMeans(n_clusters=10)
@@ -173,14 +193,22 @@ def kMeans(bagOfWords):
     print(f'Silhouette Score: {silhouette_score(bagOfWords, labels)}')
     #Plot Clusters
     plotClusters(PCA(n_components=2).fit_transform(bagOfWords.toarray()),labels, 'Kmeans Clusters')
+    getWords(textArray,labels.flatten(),"KMEANS CLUSTER WORDS")
     return labels
    
 readAndProcess("cnnhealth.txt")
 bagOfWords = bagOfWordsCreator(textArray)
+cosineDistance(bagOfWords)
+euclideanDistance(bagOfWords)
 label1 = dbscanCosine(bagOfWords)
-label2 = kMeans(bagOfWords)
-
-
-
-
-print(entropy(label2))
+label2 = aggCosine(bagOfWords)
+label3 = aggEuclidean(bagOfWords)
+label4 = kMeans(bagOfWords)
+print("Purity of Kmeans given DBSCAN: ")
+print(calculatePurity(label4,label1))
+print("Purity of DBSCAN given Kmeans: ")
+print(calculatePurity(label1,label4))
+print("Entropy of kMeans")
+print(entropy(label4))
+print("Entropy of DBSCAN")
+print(entropy(label1))
